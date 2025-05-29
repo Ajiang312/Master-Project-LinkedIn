@@ -347,6 +347,7 @@ elif st.session_state.page == "profile":
                 st.session_state.email = email
                 st.session_state.selected_location = location
                 st.session_state.selected_skills = selected_skills
+                st.session_state.selected_sector = selected_sector
                 st.session_state.profile_complete = True
                 
                 try:
@@ -457,6 +458,7 @@ elif st.session_state.page == "discover":
             category = job.get("job_category", "Non Précisé")
             company = job.get("company", "Non précisé")
             title = job.get("cleaned_title", "Titre non précisé")
+            sector = job.get("secteur_activite", "Non précisé")
             description = job.get("description", "Aucune description disponible.")
 
 
@@ -471,8 +473,12 @@ elif st.session_state.page == "discover":
                                 <p style="color: #374151; font-weight: 600;">{location}</p>
                             </div>
                             <div>
-                                <p style="color: #6B7280; margin-bottom: 0.2rem; font-weight: 500;">📅 Secteur d'Activité</p>
+                                <p style="color: #6B7280; margin-bottom: 0.2rem; font-weight: 500;">📅 Type de Job</p>
                                 <p style="color: #374151; font-weight: 600;">{category}</p>
+                            </div>
+                            <div>
+                                <p style="color: #6B7280; margin-bottom: 0.2rem; font-weight: 500;">🏢 Secteur d'activité</p>
+                                <p style="color: #374151; font-weight: 600;">{sector}</p>
                             </div>
                         </div>
                         <div style="margin-top: 1.5rem;">
@@ -480,7 +486,7 @@ elif st.session_state.page == "discover":
                             <p style="color: #374151; line-height: 1.6;">{description}</p>
                         </div>
                     </div>  
-            """.format(title=title, company=company, location=location, category=category, description=description), unsafe_allow_html=True)
+            """.format(title=title, company=company, location=location, category=category, description=description, sector=sector), unsafe_allow_html=True)
         
             # Extraction et affichage des compétences issues de 'final_skills'
             final_skills = job.get("final_skills", "")
@@ -555,6 +561,11 @@ elif st.session_state.page == "discover":
                                 "fb_secteur": feedback.get("secteur_activite") is not None
                         })
 
+                        # Ajouter à la liste des matchs (local)
+                        if "matches" not in st.session_state:
+                            st.session_state.matches = []
+
+                        st.session_state.matches.append(job_dict)
                         st.success("✅ Vos préférences ont été enregistrées dans Supabase !")
                         st.session_state.feedback_step = False
                         st.session_state.pending_like_job = None
@@ -621,84 +632,69 @@ elif st.session_state.page == "matches":
         else:
             # Affichage des matches
             for i, match in enumerate(matches):
-                with st.container():
-                    if match.get('perfect_match', False):
-                        st.markdown('<div class="perfect-match">✨ Match Parfait! 100% de compatibilité</div>', unsafe_allow_html=True)
-                    
-                    col1, col2 = st.columns([3, 1])
-                    
-                    with col1:
-                        st.markdown(f"""
-                        <div style="background-color: white; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-left: 4px solid #6366F1;">
-                            <h3 style="margin-bottom: 0.5rem; color: #1F2937;">{match['title']}</h3>
-                            <p class="company-name" style="margin-bottom: 1rem;">{match['company']}</p>
-                            
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    title = match.get("title", "Titre non précisé")
+                    company = match.get("company", "Entreprise non précisée")
+                    location = match.get("location", "Non précisée")
+                    category = match.get("job_category", "Non précisé")
+                    description = match.get("description", "Aucune description disponible.")
+                    sector = match.get("secteur_activite", "Non précisé")
+
+                    st.markdown("""
+                        <div class="job-card">
+                            <div class="match-badge">✨ Votre Meilleur Match !</div>
+                            <h2 style="margin-bottom: 0.5rem; color: #1F2937;">{title}</h2>
+                            <p class="company-name" style="margin-bottom: 1.5rem;">{company}</p>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
                                 <div>
-                                    <p style="color: #6B7280; margin-bottom: 0.2rem; font-size: 0.9rem;">📍 Localisation</p>
-                                    <p style="color: #374151; font-weight: 500;">{match.get('location', 'Non précisé')}</p>
+                                    <p style="color: #6B7280; margin-bottom: 0.2rem; font-weight: 500;">📍 Localisation</p>
+                                    <p style="color: #374151; font-weight: 600;">{location}</p>
                                 </div>
                                 <div>
-                                    <p style="color: #6B7280; margin-bottom: 0.2rem; font-size: 0.9rem;">💰 Salaire</p>
-                                    <p style="color: #059669; font-weight: 500;">{match.get('salary', 'Non précisé')}</p>
+                                    <p style="color: #6B7280; margin-bottom: 0.2rem; font-weight: 500;">📅 Type de Job</p>
+                                    <p style="color: #374151; font-weight: 600;">{category}</p>
                                 </div>
                                 <div>
-                                    <p style="color: #6B7280; margin-bottom: 0.2rem; font-size: 0.9rem;">📅 Publié le</p>
-                                    <p style="color: #374151; font-weight: 500;">{match.get('date_posted', 'Récemment')}</p>
+                                    <p style="color: #6B7280; margin-bottom: 0.2rem; font-weight: 500;">🏢 Secteur d'activité</p>
+                                    <p style="color: #374151; font-weight: 600;">{sector}</p>
                                 </div>
                             </div>
-                            
-                            <div style="margin-bottom: 1rem;">
-                                <h4 style="color: #374151; margin-bottom: 0.5rem;">Description</h4>
-                                <p style="color: #4B5563; line-height: 1.6;">{match['description'][:300]}{"..." if len(match['description']) > 300 else ""}</p>
-                            </div>
-                            
-                            <div style="margin-bottom: 1rem;">
-                                <h4 style="color: #374151; margin-bottom: 0.5rem;">Compétences requises</h4>
-                        """, unsafe_allow_html=True)
+                        </div>  
+                """.format(title=title, company=company, location=location, category=category, description=description, sector=sector), unsafe_allow_html=True)
+
+
+                    # Extraire et afficher les compétences
+                    final_skills = match.get("final_skills", "")
+                    skills_list = [s.strip() for s in final_skills.split(",") if s.strip()]
+
+                    if skills_list:
+                        st.markdown("#### 🧠 Compétences requises")
+                        html_skills = '<div style="margin-top: 0.5rem;">'
+    
+                        for skill in skills_list[:10]:  # Limite à 10 compétences affichées
+                            html_skills += f"<span style='display: inline-block; background-color: #EFF6FF; color: #1D4ED8; border-radius: 12px; padding: 6px 12px; margin: 4px 6px 4px 0; font-size: 0.85rem;'>{skill}</span>"
+    
+                        html_skills += "</div>"
+                        st.markdown(html_skills, unsafe_allow_html=True)
                         
-                        # Compétences correspondantes
-                        job_text = match['description'].lower()
-                        matched_skills = [skill for skill in skills if skill.lower() in job_text]
+                    # Boutons d'action
+                    if st.button("✉️ Postuler", key=f"apply_{i}", type="primary", use_container_width=True):
+                        st.success("🎉 Candidature envoyée avec succès!")
+                        st.balloons()
                         
-                        for skill in matched_skills[:8]:
-                            st.markdown(f'<span class="skill-badge">{skill}</span>', unsafe_allow_html=True)
-                        
-                        st.markdown("</div></div>", unsafe_allow_html=True)
-                    
-                    with col2:
-                        matching_score = int(match.get("matching_score", 0.5) * 100)
-                        st.markdown(f"""
-                        <div style="background: linear-gradient(135deg, #6366F1, #8B5CF6); 
-                                    color: white; padding: 1.5rem; border-radius: 10px; text-align: center; margin-bottom: 1rem;">
-                            <h2 style="margin: 0; font-size: 2rem;">{matching_score}%</h2>
-                            <p style="margin: 0; font-size: 0.9rem;">Match</p>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        # Boutons d'action
-                        if st.button("✉️ Postuler", key=f"apply_{i}", type="primary", use_container_width=True):
-                            st.success("🎉 Candidature envoyée avec succès!")
-                            st.balloons()
-                        
-                        col_a, col_b = st.columns(2)
-                        with col_a:
-                            if st.button("📋", key=f"details_{i}", help="Voir détails"):
-                                with st.expander("Détails complets", expanded=True):
-                                    st.write("**Description complète :**")
-                                    st.write(match['description'])
+                    col_a, col_b = st.columns(2)
+                    with col_a:
+                        if st.button("📋", key=f"details_{i}", help="Voir détails"):
+                            with st.expander("Détails complets", expanded=True):
+                                st.write("**Description complète :**")
+                                st.write(match['description'])
                                     
-                                    st.write("**Toutes les compétences détectées :**")
-                                    all_skills = [skill for skill in skills if skill.lower() in match['description'].lower()]
-                                    for skill in all_skills:
-                                        st.markdown(f'<span class="skill-badge">{skill}</span>', unsafe_allow_html=True)
-                        
-                        with col_b:
-                            if st.button("🗑️", key=f"remove_{i}", help="Supprimer"):
-                                st.session_state.matches.remove(match)
-                                st.success("Match supprimé!")
-                                st.rerun()
-                
+                    with col_b:
+                        if st.button("🗑️", key=f"remove_{i}", help="Supprimer"):
+                            st.session_state.matches.remove(match)
+                            st.success("Match supprimé!")
+                            st.rerun()
                 st.markdown("---")
             
             # Bouton pour retourner à la découverte
