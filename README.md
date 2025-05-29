@@ -47,7 +47,6 @@ Ce projet vise à développer une solution intelligente de recommandation d’of
 | **PostgreSQL** + **Supabase** | Stockage des données |
 | **Streamlit** / **HTML-CSS** | Interface utilisateur |
 | **Git & GitHub** | Suivi de version et collaboration |
-| *(optionnel)* Docker, GCP | Pour déploiement et mise en production |
 
 ---
 
