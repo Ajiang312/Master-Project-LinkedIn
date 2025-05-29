@@ -21,9 +21,9 @@ Ce projet vise à développer une solution intelligente de recommandation d’of
 
 | Membre   | Responsabilités principales |
 |----------|-----------------------------|
-| **Antoine** | - Scraping des offres d’emploi (Playwright)<br>- Nettoyage et traitement des données (1, 2, 3) |
-| **Roman**   | - Développement des modèles ML (recommandation)<br>- Import des données dans Supabase (PostgreSQL) |
-| **Tess**    | - Création de l’interface utilisateur (Streamlit / HTML-CSS)<br>- Affichage dynamique, gestion des interactions utilisateur |
+| **Antoine JIANG** | - Scraping des offres d’emploi (Playwright)<br>- Nettoyage et traitement des données (1, 2, 3) |
+| **Roman LACAZE**   | - Développement des modèles ML (recommandation)<br>- Import des données dans Supabase (PostgreSQL) |
+| **Tess BUCHET-LE-BIHAN**    | - Création de l’interface utilisateur (Streamlit / HTML-CSS)<br>- Affichage dynamique, gestion des interactions utilisateur |
 
 ---
 
