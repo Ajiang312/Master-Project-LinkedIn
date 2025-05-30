@@ -507,6 +507,14 @@ elif st.session_state.page == "discover":
             # ===================== Bloc de feedback intermédiaire =============================
             with col1:
                 if st.button("👎 Passer", use_container_width=True):
+                    offer_id = job.get("job_id") or job.get("id")
+                    user_id  = st.session_state.user_id
+                    with engine.begin() as conn:
+                        conn.execute(text("""
+                            INSERT INTO interactions (user_id, offer_id, liked,feedback_competence,feedback_ville,feedback_secteur)
+                            VALUES (:user_id, :offer_id, false,false,false,false)
+                        """), {"user_id": user_id, "offer_id": offer_id})
+                    st.success("⛔ Dislike enregistré.")
                     st.session_state.current_job = get_random_offer(engine)
                     st.rerun()
 
@@ -529,44 +537,48 @@ elif st.session_state.page == "discover":
                 if st.button("✅ Valider mes préférences"):
                     feedback = {}
                     key_map = {
-                        "Les compétences requises": "final_skills",
-                        "La localisation": "location",
-                        "Le secteur d'activité": "secteur_activite"
+                        "Les compétences requises": "feedback_competence",
+                        "La localisation": "feedback_ville",
+                        "Le secteur d'activité": "feedback_secteur"
                     }
 
+                    # On initialise tout à False
+                    feedback = {col: False for col in key_map.values()}
+                    # Puis on passe à True les feedbacks cochés
                     for r in choix:
                         if r in key_map:
-                            feedback[key_map[r]] = "👍 J'aime"
+                            feedback[key_map[r]] = True
 
                     job_dict = st.session_state.get("pending_like_job")
                     user_id = st.session_state.get("user_id")
                     offer_id = job_dict.get("job_id") or job_dict.get("id")
 
-                    # ✅ Insérer dans Supabase
-                    with engine.begin() as conn:
-                        conn.execute(text("""
+                    try:
+                        with engine.begin() as conn:
+                            conn.execute(text("""
                                 INSERT INTO interactions (
-                                    user_id, offer_id,
+                                    user_id, offer_id, liked,
                                     feedback_competence,
-                                    feedback_ville, feedback_secteur
+                                    feedback_ville,
+                                    feedback_secteur
                                 ) VALUES (
-                                    :user_id, :offer_id,
-                                    :fb_skills, :fb_location, :fb_secteur
+                                    :user_id, :offer_id, TRUE,
+                                    :feedback_competence,
+                                    :feedback_ville,
+                                    :feedback_secteur
                                 )
-                        """), {
+                            """), {
                                 "user_id": user_id,
                                 "offer_id": offer_id,
-                                "fb_skills": feedback.get("final_skills") is not None,
-                                "fb_location": feedback.get("location") is not None,
-                                "fb_secteur": feedback.get("secteur_activite") is not None
-                        })
-
-                        # Ajouter à la liste des matchs (local)
-                        if "matches" not in st.session_state:
-                            st.session_state.matches = []
-
-                        st.session_state.matches.append(job_dict)
+                                "feedback_competence": feedback["feedback_competence"],
+                                "feedback_ville":      feedback["feedback_ville"],
+                                "feedback_secteur":    feedback["feedback_secteur"]
+                            })
+                    except Exception as e:
+                        st.error(f"❌ Erreur lors de l'enregistrement : {e}")
+                    else:
                         st.success("✅ Vos préférences ont été enregistrées dans Supabase !")
+                        st.session_state.matches.append(job_dict)
                         st.session_state.feedback_step = False
                         st.session_state.pending_like_job = None
                         st.session_state.current_job = get_random_offer(engine)
@@ -643,7 +655,7 @@ elif st.session_state.page == "matches":
 
                     st.markdown("""
                         <div class="job-card">
-                            <div class="match-badge">✨ Votre Meilleur Match !</div>
+                            <div class="match-badge">✨ Offre aléatoire !</div>
                             <h2 style="margin-bottom: 0.5rem; color: #1F2937;">{title}</h2>
                             <p class="company-name" style="margin-bottom: 1.5rem;">{company}</p>
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
